@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  npm-publish:
+    name: Publish to npm
+    if: ${{ secrets.NPM_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  github-release:
+    name: Create GitHub Release with assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Package plugin tarball (npm pack)
+        run: npm pack --pack-destination dist/
+
+      - name: Build a "bundle" zip for direct-path installs
+        run: |
+          mkdir -p bundle
+          cp -r dist bundle/dist
+          mkdir -p bundle/patch bundle/examples
+          cp patch/desktop-rtl.sh bundle/patch/
+          cp examples/opencode.json bundle/examples/
+          cp package.json LICENSE README.md README.en.md README.ar.md bundle/
+          (cd bundle && zip -r ../opencode-rtl-fix-bundle.zip .)
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: opencode-rtl-fix ${{ github.ref_name }}
+          files: |
+            dist/*.tgz
+            opencode-rtl-fix-bundle.zip

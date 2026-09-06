@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "opencode-rtl-fix",
+  "version": "0.1.0",
+  "description": "Bidirectional (RTL/LTR) text fix for opencode — Unicode UAX #9 isolates for terminal/TUI, Desktop and web, plus an Electron app patch for the live prompt composer.",
+  "type": "module",
+  "license": "MIT",
+  "author": "sina khanzadeh <khanzadeh.1377@gmail.com>",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./tui": {
+      "types": "./dist/tui.d.ts",
+      "import": "./dist/tui.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "patch",
+    "examples",
+    "README.md",
+    "README.en.md",
+    "README.ar.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "opencode": ">=1.17.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/programmer-1998/RTL_OpenCode.git"
+  },
+  "homepage": "https://github.com/programmer-1998/RTL_OpenCode",
+  "bugs": {
+    "url": "https://github.com/programmer-1998/RTL_OpenCode/issues"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.js",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "rtl",
+    "ltr",
+    "bidi",
+    "bidirectional",
+    "persian",
+    "farsi",
+    "arabic",
+    "hebrew",
+    "urdu"
+  ],
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.18",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3"
+  }
+}
