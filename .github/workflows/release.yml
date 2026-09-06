@@ -10,7 +10,6 @@ permissions:
 jobs:
   npm-publish:
     name: Publish to npm
-    if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,9 +21,12 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm publish
+
+      - name: Publish to npm
+        if: ${{ env.NODE_AUTH_TOKEN != '' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
 
   github-release:
     name: Create GitHub Release with assets
