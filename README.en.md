@@ -14,6 +14,10 @@
 
 </p>
 
+<p align="center">
+  <img src="example.png" alt="opencode RTL fix in action — mixed Persian/English text rendered correctly without scrambling" width="800">
+</p>
+
 ## 📌 The Problem
 
 When an English word or identifier appears inside a Persian/Arabic sentence — like `SINA`, a filename, a path or a package name — the opencode UI scrambles the word order because it does not implement the Unicode Bidirectional Algorithm (**UAX #9**):

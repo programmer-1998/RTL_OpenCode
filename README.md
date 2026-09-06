@@ -12,6 +12,8 @@
 
 **زبان‌ها:** [🇮🇷 فارسی](README.md) · [🇬🇧 English](README.en.md) · [🇸🇦 العربية](README.ar.md)
 
+<img src="example.png" alt="پلاگین RTL اوپن‌کد در حال اجرا — متن فارسی و انگلیسی بدون بهمریختگی نمایش داده می‌شود" width="800">
+
 </div>
 
 <div dir="rtl">

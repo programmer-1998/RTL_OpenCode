@@ -12,6 +12,8 @@
 
 **اللغات:** [🇮🇷 فارسی](README.md) · [🇬🇧 English](README.en.md) · [🇸🇦 العربية](README.ar.md)
 
+<img src="example.png" alt="إصلاح RTL لأوبن‌كود أثناء العمل — النص الفارسي والإنجليزي يُعرض دون خلط" width="800">
+
 </div>
 
 <div dir="rtl" lang="ar">
