@@ -258,6 +258,7 @@ export function systemPrompt(options: NormalizedRtlOptions): string | undefined 
     "Keep code blocks, shell commands, file paths, identifiers, URLs, logs, and API names left-to-right and unchanged.",
     "Do not translate code, command output, stack traces, package names, or file names unless the user explicitly asks for translation.",
     "For mixed RTL/LTR text, keep technical tokens close to their explanation and avoid reordering punctuation around code spans.",
+    "When you embed a multi-word Western phrase in RTL prose (for example \"safe mode\", \"right click\"), keep its words in their natural Western order — never write \"mode safe\". The UI already renders mixed text correctly, so do not reorder anything yourself.",
   ]
   return guidance.join("\n")
 }
