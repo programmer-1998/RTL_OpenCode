@@ -37,7 +37,7 @@ This project solves the problem in **two complementary layers**:
 | Layer | Tool | What it fixes |
 | --- | --- | --- |
 | **1) Text layer (opencode server)** | `server` plugin | Sent user messages, chat history, model replies and tool output — using Unicode **bidi isolates** (`RLI` / `LRI` / `PDI`) per UAX #9 |
-| **2) UI layer (Desktop)** | `patch/desktop-rtl.sh` | The **live prompt composer** that no plugin hook can touch — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` |
+| **2) UI layer (Desktop)** | `patch/` scripts (Linux / macOS / Windows) | The **live prompt composer** that no plugin hook can touch — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` |
 
 <details>
 <summary>🔍 How does it work?</summary>
@@ -57,13 +57,13 @@ This project solves the problem in **two complementary layers**:
 - ✅ Optional system-guidance so the model answers in your language and keeps code/paths LTR
 - ✅ Optional `OPENCODE_RTL*` env vars for tools
 - ✅ TUI status commands: `RTL: Show Status` and `RTL: Analyze Sample`
-- ✅ Desktop patch with automatic backup, `app.asar.unpacked` layout verification and `--unpatch`
+- ✅ Desktop patch for all three OSes (Linux / macOS / Windows) with automatic backup, `app.asar.unpacked` layout verification and `--unpatch`
 
 ## ⚠️ Important limitation (honest)
 
 **The prompt composer, while you are still typing, is rendered by opencode's own UI and no plugin hook has access to the live buffer.** So:
 
-- **Desktop app** → this part is fixed by `patch/desktop-rtl.sh` (layer 2).
+- **Desktop app** → this part is fixed by the `patch/` scripts — `patch/linux/desktop-rtl.sh`, `patch/macos/desktop-rtl.sh` or `patch/windows/desktop-rtl.ps1` (layer 2).
 - **Terminal/TUI** → it is rendered cell-by-cell by `@opentui/core`; the real fix there belongs to opencode itself. Yet as soon as you send the message, your prompt and the model reply are fixed by layer 1 everywhere.
 
 ---
@@ -121,6 +121,8 @@ Put the plugin in one of these project-local folders and opencode will find it w
 .opencode/plugin/rtl/dist/…
 ```
 
+> 💡 Layer 1 (the server plugin, written in JavaScript) behaves **exactly the same on Linux, macOS and Windows**. Only the Desktop patch (layer 2) has a separate file per OS — see below.
+
 ---
 
 ## ⚙️ Plugin options
@@ -149,16 +151,43 @@ Put the plugin in one of these project-local folders and opencode will find it w
 
 ## 🖥️ Desktop app patch (for the composer)
 
-The Electron app renders text without any automatic direction. This script appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so the composer and messages behave exactly like in modern browsers.
+The Electron app renders text without any automatic direction. The patch appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so the composer and messages behave exactly like in modern browsers.
 
-### Install
+The patch is powered by a **shared JavaScript engine** (`patch/lib/patch-asar.mjs`) that runs identically on all three OSes; only the per-OS **wrapper** locates the app and takes the needed privileges (sudo / UAC):
+
+| OS | Install file | Requirements |
+| --- | --- | --- |
+| 🐧 Linux | `patch/linux/desktop-rtl.sh` | node 20+ and sudo |
+| 🍎 macOS | `patch/macos/desktop-rtl.sh` | node 20+ and sudo |
+| 🪟 Windows | `patch/windows/desktop-rtl.ps1` | node 20+ |
+
+### Install on Linux
 
 ```sh
-# requires: node + npx
-sudo bash patch/desktop-rtl.sh
+sudo bash patch/linux/desktop-rtl.sh
 ```
 
-What it does:
+### Install on macOS
+
+```sh
+sudo bash patch/macos/desktop-rtl.sh
+```
+
+> 💡 If the app refuses to open after patching (broken code signature), re-sign it:
+> `sudo codesign --force --deep --sign - "/Applications/OpenCode.app"`
+
+### Install on Windows
+
+Open PowerShell and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1
+```
+
+Confirm the UAC prompt. (Or simply double-click `patch\windows\desktop-rtl.cmd`.)
+
+### What it does
+
 1. Backs up `app.asar` in place (`app.asar.bak-rtl`);
 2. Extracts, patches `index.html`, repacks the archive;
 3. **Verifies the `app.asar.unpacked` layout (native modules like `node-pty`) one-by-one against the previous version** so nothing breaks.
@@ -168,14 +197,21 @@ Then **close and reopen the opencode Desktop app**.
 ### Revert
 
 ```sh
-sudo bash patch/desktop-rtl.sh --unpatch
+# Linux / macOS
+sudo bash patch/linux/desktop-rtl.sh --unpatch
+sudo bash patch/macos/desktop-rtl.sh --unpatch
+```
+
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 ```
 
 ### ⚠️ After every Desktop update
 
-The app auto-updates and the update replaces the patched file. Just re-run the script after each update.
+The app auto-updates and the update replaces the patched file. Just re-run your OS's script after each update.
 
-> Default path is `/opt/OpenCode/resources/app.asar`. If installed elsewhere: `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/desktop-rtl.sh`
+> Default paths: Linux `/opt/OpenCode/resources/app.asar`, macOS `/Applications/OpenCode.app/Contents/Resources/app.asar`, Windows `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. If installed elsewhere: Linux/macOS `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`, Windows `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -215,7 +251,7 @@ The app auto-updates and the update replaces the patched file. Just re-run the s
 npm ci
 npm run build      # tsc → dist/
 npm run typecheck
-npm test           # build + 14 tests
+npm test           # build + 15 tests (incl. the desktop-patch engine)
 ```
 
 ## 📂 Structure
@@ -228,14 +264,20 @@ RTL_OpenCode/
 │   ├── tui.ts       ← TUI commands (RTL: Show Status / Analyze Sample)
 │   └── index.ts     ← exports
 ├── test/core.test.js   ← tests
-├── patch/desktop-rtl.sh ← Desktop patch script
+├── patch/
+│   ├── lib/patch-asar.mjs      ← shared cross-platform patch engine
+│   ├── linux/desktop-rtl.sh    ← Desktop patch for Linux
+│   ├── macos/desktop-rtl.sh    ← Desktop patch for macOS
+│   └── windows/
+│       ├── desktop-rtl.ps1     ← Desktop patch for Windows
+│       └── desktop-rtl.cmd     ← Windows double-click launcher
 ├── examples/opencode.json ← full example config
 └── dist/             ← build output (committed)
 ```
 
 ## 🤖 CI & Releases (GitHub Actions)
 
-- **`.github/workflows/ci.yml`** — on push/PR: install, typecheck, build, test on Node 20/22/24 + assert `dist` is in sync with source.
+- **`.github/workflows/ci.yml`** — on push/PR: install, typecheck, build, test on Node 20/22/24 + assert `dist` is in sync with source + syntax and engine tests for all three OS patch scripts.
 - **`.github/workflows/release.yml`** — on a `v*` tag push:
   - creates a GitHub **Release** with a bundle (zip) + `npm pack` (.tgz);
   - if the `NPM_TOKEN` secret is configured, it also **publishes to npm** (`opencode-rtl-fix`).

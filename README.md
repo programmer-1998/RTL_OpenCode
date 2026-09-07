@@ -37,7 +37,7 @@
 | لایه | ابزار | چه چیزی را درست می‌کند |
 | --- | --- | --- |
 | **۱) لایهٔ متن (سرویس اوپن‌کد)** | پلاگین `server` | پیام‌های ارسال‌شدهٔ کاربر، پیام‌های تاریخی، پاسخ مدل و خروجی ابزارها — با «ایزوله‌های بیدی» (RLI / LRI / PDI) مطابق UAX #9 |
-| **۲) لایهٔ رابط (دسکتاپ)** | اسکریپت پچ `patch/desktop-rtl.sh` | **کادر تایپ زندهٔ پرامپت** که پلاگین به آن دسترسی ندارد — با تزریق `dir="auto"` + `unicode-bidi: plaintext` به `app.asar` |
+| **۲) لایهٔ رابط (دسکتاپ)** | اسکریپت‌های پچ `patch/` (لینوکس / مک / ویندوز) | **کادر تایپ زندهٔ پرامپت** که پلاگین به آن دسترسی ندارد — با تزریق `dir="auto"` + `unicode-bidi: plaintext` به `app.asar` |
 
 <details>
 <summary>🔍 چطور کار می‌کند؟</summary>
@@ -57,12 +57,12 @@
 - ✅ راهنمای سیستم به مدل (اختیاری) تا به زبان کاربر پاسخ دهد و کد/مسیرها را LTR نگه دارد
 - ✅ ست کردن `OPENCODE_RTL*` در environment ابزارها (اختیاری)
 - ✅ دو دستور وضعیت در TUI: `RTL: Show Status` و `RTL: Analyze Sample`
-- ✅ پچ دسکتاپ با بک‌آپ خودکار، تشخیص بومی‌سازی `app.asar.unpacked` و قابلیت بازگشت (`--unpatch`)
+- ✅ پچ دسکتاپ برای هر سه سیستم‌عامل (لینوکس / مک / ویندوز) با بک‌آپ خودکار، تشخیص بومی‌سازی `app.asar.unpacked` و قابلیت بازگشت (`--unpatch`)
 
 ## ⚠️ محدودیت مهم (شفاف)
 
 **کادر تایپ پرامپت وقتی هنوز ارسال نکرده‌اید، توسط UI اوپن‌کد رندر می‌شود و هیچ هوک پلاگینی به بافرِ زنده‌ی آن دسترسی ندارد.** برای همین:
-- در **اپ دسکتاپ** → این بخش را `patch/desktop-rtl.sh` حل می‌کند (لایهٔ ۲).
+- در **اپ دسکتاپ** → این بخش را اسکریپت‌های پچ `patch/` حل می‌کنند — `patch/linux/desktop-rtl.sh`، `patch/macos/desktop-rtl.sh` یا `patch/windows/desktop-rtl.ps1` (لایهٔ ۲).
 - در **ترمینال/TUI** → سلول‌به‌سلول توسط `@opentui/core` رندر می‌شود و حل نهایی آن با خود اوپن‌کد است؛ اما به‌محض ارسال، پیام شما و پاسخ مدل با لایهٔ ۱ درست می‌شود.
 - به‌محض ارسال، همه‌جا (ترمینال، دسکتاپ، وب) درست است.
 
@@ -121,6 +121,8 @@ npm ci && npm run build
 .opencode/plugin/rtl/dist/…
 ```
 
+> 💡 لایهٔ ۱ (پلاگین سمت سرور که با جاوااسکریپت نوشته شده) روی **لینوکس، مک و ویندوز کاملاً یکسان** کار می‌کند. فقط پچ دسکتاپ (لایهٔ ۲) برای هر سیستم‌عامل فایل جداگانه دارد — پایین را ببینید.
+
 ---
 
 ## ⚙️ آپشن‌های پلاگین
@@ -149,16 +151,43 @@ npm ci && npm run build
 
 ## 🖥️ پچ اپ دسکتاپ (برای کادر تایپ)
 
-اپ دسکتاپ (Electron) متن را بدون جهت‌دهیِ خودکار رندر می‌کند. این اسکریپت یک `<style>` + `<script>` به `out/renderer/index.html` داخل `app.asar` اضافه می‌کند تا کادر تایپ و پیام‌ها دقیقاً مثل مرورگرهای مدرن عمل کنند.
+اپ دسکتاپ (Electron) متن را بدون جهت‌دهیِ خودکار رندر می‌کند. پچ یک `<style>` + `<script>` به `out/renderer/index.html` داخل `app.asar` اضافه می‌کند تا کادر تایپ و پیام‌ها دقیقاً مثل مرورگرهای مدرن عمل کنند.
 
-### نصب
+پچ از یک **موتور مشترک جاوااسکریپت** استفاده می‌کند (`patch/lib/patch-asar.mjs`) که روی هر سه سیستم‌عامل یکسان کار می‌کند؛ فقط «بسته‌بند» (wrapper) مخصوص هر سیستم‌عامل، مسیر اپ را پیدا و دسترسی لازم (sudo / UAC) را می‌گیرد:
+
+| سیستم‌عامل | فایل نصب | پیش‌نیاز |
+| --- | --- | --- |
+| 🐧 لینوکس | `patch/linux/desktop-rtl.sh` | node 20+ و sudo |
+| 🍎 مک | `patch/macos/desktop-rtl.sh` | node 20+ و sudo |
+| 🪟 ویندوز | `patch/windows/desktop-rtl.ps1` | node 20+ |
+
+### نصب روی لینوکس
 
 ```sh
-# پیش‌نیاز: node + npx
-sudo bash patch/desktop-rtl.sh
+sudo bash patch/linux/desktop-rtl.sh
 ```
 
-این کار:
+### نصب روی مک
+
+```sh
+sudo bash patch/macos/desktop-rtl.sh
+```
+
+> 💡 اگر بعد از پچ، اپ بالا نیامد (امضای کد شکسته شده)، دوباره امضا کنید:
+> `sudo codesign --force --deep --sign - "/Applications/OpenCode.app"`
+
+### نصب روی ویندوز
+
+PowerShell را باز کنید و اجرا کنید:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1
+```
+
+با پنجرهٔ UAC موافقت کنید. (یا مستقیماً روی `patch\windows\desktop-rtl.cmd` دوبار کلیک کنید.)
+
+### این کار چه می‌کند؟
+
 1. یک بک‌آپ از `app.asar` در همان‌جا (`app.asar.bak-rtl`) می‌سازد؛
 2. `app.asar` را باز می‌کند، `index.html` را پچ می‌کند، دوباره می‌بندد؛
 3. چیدمان `app.asar.unpacked` (ماژول‌های native مانند `node-pty`) را **یکی‌به‌یکی با نسخهٔ قبلی مقایسه و تأیید می‌کند** تا چیزی نشکند.
@@ -168,14 +197,21 @@ sudo bash patch/desktop-rtl.sh
 ### بازگشت (Revert)
 
 ```sh
-sudo bash patch/desktop-rtl.sh --unpatch
+# لینوکس / مک
+sudo bash patch/linux/desktop-rtl.sh --unpatch
+sudo bash patch/macos/desktop-rtl.sh --unpatch
+```
+
+```powershell
+# ویندوز
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 ```
 
 ### ⚠️ بعد از هر آپدیت دسکتاپ
 
-اپ از خودکار-آپدیت استفاده می‌کند و آپدیت، فایل پچ‌شده را جایگزین می‌کند. بعد از هر آپدیت فقط کافی است اسکریپت را دوباره اجرا کنید.
+اپ از خودکار-آپدیت استفاده می‌کند و آپدیت، فایل پچ‌شده را جایگزین می‌کند. بعد از هر آپدیت فقط کافی است اسکریپت سیستم‌عامل خودتان را دوباره اجرا کنید.
 
-> مسیر پیش‌فرض `/opt/OpenCode/resources/app.asar` است. اگر جای دیگری نصب است: `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/desktop-rtl.sh`
+> مسیر پیش‌فرض: لینوکس `/opt/OpenCode/resources/app.asar`، مک `/Applications/OpenCode.app/Contents/Resources/app.asar`، ویندوز `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. اگر جای دیگری نصب است: لینوکس/مک `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/linux (یا macos)/desktop-rtl.sh`، ویندوز `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -215,7 +251,7 @@ sudo bash patch/desktop-rtl.sh --unpatch
 npm ci
 npm run build      # tsc → dist/
 npm run typecheck  # بررسی تایپ‌ها
-npm test           # build + تست‌های 14گانه
+npm test           # build + تست‌های 15گانه (شامل موتور پچ دسکتاپ)
 ```
 
 ## 📂 ساختار
@@ -228,14 +264,20 @@ RTL_OpenCode/
 │   ├── tui.ts       ← دستورهای TUI (RTL: Show Status / Analyze Sample)
 │   └── index.ts     ← خروجی‌ها
 ├── test/core.test.js   ← تست‌ها
-├── patch/desktop-rtl.sh ← پچ اپ دسکتاپ
+├── patch/
+│   ├── lib/patch-asar.mjs      ← موتور مشترک پچ (جاوااسکریپت، همهٔ سیستم‌عامل‌ها)
+│   ├── linux/desktop-rtl.sh    ← پچ اپ دسکتاپ لینوکس
+│   ├── macos/desktop-rtl.sh    ← پچ اپ دسکتاپ مک
+│   └── windows/
+│       ├── desktop-rtl.ps1     ← پچ اپ دسکتاپ ویندوز
+│       └── desktop-rtl.cmd     ← اجرای دوبار-کلیک ویندوز
 ├── examples/opencode.json ← نمونه کانفیگ کامل
 └── dist/             ← خروجی بیلد (کامیت‌شده)
 ```
 
 ## 🤖 CI و انتشار (GitHub Actions)
 
-- **`.github/workflows/ci.yml`** — روی push/PR: نصب، typecheck، build، تست در Node 20/22/24 + کنترل هم‌گام‌بودن `dist` با سورس.
+- **`.github/workflows/ci.yml`** — روی push/PR: نصب، typecheck، build، تست در Node 20/22/24 + کنترل هم‌گام‌بودن `dist` با سورس + تست و چک نحوی اسکریپت‌های پچ‌های هر سه سیستم‌عامل.
 - **`.github/workflows/release.yml`** — با پوشِ تگِ `v*`:
   - یک **Release** در گیت‌هاب با باندل (zip) + `npm pack` (.tgz) می‌سازد؛
   - اگر سکرت `NPM_TOKEN` تنظیم شده باشد، خودکار در **npm** هم منتشر می‌شود (`opencode-rtl-fix`).

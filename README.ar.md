@@ -37,7 +37,7 @@
 | الطبقة | الأداة | ماذا تُصلح |
 | --- | --- | --- |
 | **1) طبقة النص (خادم أوبن‌كود)** | إضافة `server` | رسائل المستخدم المُرسلة وسجل المحادثة وردود النموذج ومخرجات الأدوات — عبر **عزل ثنائي الاتجاه** (`RLI` / `LRI` / `PDI`) وفق UAX #9 |
-| **2) طبقة الواجهة (سطح المكتب)** | سكربت `patch/desktop-rtl.sh` | **حقل الكتابة المباشر** الذي لا تصل إليه أي خطافات إضافة — عبر حقن `dir="auto"` + `unicode-bidi: plaintext` داخل `app.asar` |
+| **2) طبقة الواجهة (سطح المكتب)** | سكربتات `patch/` (لينكس / ماك / ويندوز) | **حقل الكتابة المباشر** الذي لا تصل إليه أي خطافات إضافة — عبر حقن `dir="auto"` + `unicode-bidi: plaintext` داخل `app.asar` |
 
 <details>
 <summary>🔍 كيف يعمل؟</summary>
@@ -57,13 +57,13 @@
 - ✅ إرشاد اختياري للنظام حتى يجيب النموذج بلغتك ويُبقي الكود/المسارات LTR
 - ✅ متغيرات بيئة اختيارية `OPENCODE_RTL*` للأدوات
 - ✅ أمران لحالة TUI: `RTL: Show Status` و `RTL: Analyze Sample`
-- ✅ رقعة سطح المكتب مع نسخة احتياطية تلقائية وتحقّق من تخطيط `app.asar.unpacked` وإمكانية التراجع (`--unpatch`)
+- ✅ رقعة سطح المكتب لأنظمة التشغيل الثلاثة (لينكس / ماك / ويندوز) مع نسخة احتياطية تلقائية وتحقّق من تخطيط `app.asar.unpacked` وإمكانية التراجع (`--unpatch`)
 
 ## ⚠️ قيد مهم (بصراحة)
 
 **حقل كتابة البرومبت أثناء الكتابة الفعلية قبل الإرسال يُرسم بواجهة أوبن‌كود نفسها ولا يصل إليه أي خطاف إضافة.** لذلك:
 
-- **تطبيق سطح المكتب** → يُصلح هذا الجزء `patch/desktop-rtl.sh` (الطبقة ٢).
+- **تطبيق سطح المكتب** → يُصلح هذا الجزء سكربتات `patch/` — `patch/linux/desktop-rtl.sh`, أو `patch/macos/desktop-rtl.sh`, أو `patch/windows/desktop-rtl.ps1` (الطبقة ٢).
 - **الطرفية/TUI** → يُرسم خليةً بخلية عبر `@opentui/core`، والحل النهائي له يرجع إلى أوبن‌كود نفسه؛ لكن فور إرسال الرسالة، يُصلح برومبتك ورد النموذج عبر الطبقة ١ في كل مكان.
 
 ---
@@ -121,6 +121,8 @@ npm ci && npm run build
 .opencode/plugin/rtl/dist/…
 ```
 
+> 💡 الطبقة ١ (إضافة الخادم المكتوبة بجافاسكربت) تعمل على **لينكس وماك وويندوز بشكل متطابق تمامًا**. فقط رقعة سطح المكتب (الطبقة ٢) لها ملف منفصل لكل نظام تشغيل — انظر أدناه.
+
 ---
 
 ## ⚙️ خيارات الإضافة
@@ -149,16 +151,43 @@ npm ci && npm run build
 
 ## 🖥️ رقعة تطبيق سطح المكتب (لحقل الكتابة)
 
-يُرسم تطبيق Electron النص دون أي اتجاه تلقائي. يضيف هذا السكربت `<style>` + `<script>` إلى `out/renderer/index.html` داخل `app.asar` ليعمل حقل الكتابة والرسائل تمامًا كما في المتصفحات الحديثة.
+يُرسم تطبيق Electron النص دون أي اتجاه تلقائي. تُضيف الرقعة `<style>` + `<script>` إلى `out/renderer/index.html` داخل `app.asar` ليعمل حقل الكتابة والرسائل تمامًا كما في المتصفحات الحديثة.
 
-### التثبيت
+تستند الرقعة إلى **محرك جافاسكربت مشترك** (`patch/lib/patch-asar.mjs`) يعمل بنفس الطريقة على أنظمة التشغيل الثلاثة؛ وكل «غلاف» خاص بنظام تشغيل يحدد مسار التطبيق ويأخذ الصلاحيات المطلوبة (sudo / UAC):
+
+| نظام التشغيل | ملف التثبيت | المتطلبات |
+| --- | --- | --- |
+| 🐧 لينكس | `patch/linux/desktop-rtl.sh` | node 20+ و sudo |
+| 🍎 ماك | `patch/macos/desktop-rtl.sh` | node 20+ و sudo |
+| 🪟 ويندوز | `patch/windows/desktop-rtl.ps1` | node 20+ |
+
+### التثبيت على لينكس
 
 ```sh
-# المتطلبات: node + npx
-sudo bash patch/desktop-rtl.sh
+sudo bash patch/linux/desktop-rtl.sh
 ```
 
-ماذا يفعل:
+### التثبيت على ماك
+
+```sh
+sudo bash patch/macos/desktop-rtl.sh
+```
+
+> 💡 إذا رفض التطبيق الفتح بعد الرقعة (توقيع الكود)، أعِد التوقيع:
+> `sudo codesign --force --deep --sign - "/Applications/OpenCode.app"`
+
+### التثبيت على ويندوز
+
+افتح PowerShell وشغّل:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1
+```
+
+وافق على نافذة UAC. (أو انقر نقرًا مزدوجًا على `patch\windows\desktop-rtl.cmd`.)
+
+### ماذا يفعل
+
 1. ينشئ نسخة احتياطية من `app.asar` في مكانها (`app.asar.bak-rtl`)؛
 2. يستخرج الأرشيف ويُرقع `index.html` ويعيد التعبئة؛
 3. **يتحقق من تخطيط `app.asar.unpacked` (الوحدات الأصلية مثل `node-pty`) واحدًا تلو الآخر مقابل النسخة السابقة** حتى لا ينكسر شيء.
@@ -168,14 +197,21 @@ sudo bash patch/desktop-rtl.sh
 ### التراجع
 
 ```sh
-sudo bash patch/desktop-rtl.sh --unpatch
+# لينكس / ماك
+sudo bash patch/linux/desktop-rtl.sh --unpatch
+sudo bash patch/macos/desktop-rtl.sh --unpatch
+```
+
+```powershell
+# ويندوز
+powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 ```
 
 ### ⚠️ بعد كل تحديث لسطح المكتب
 
-التطبيق يتحدّث تلقائيًا والتحديث يستبدل الملف المُرقَّع. ما عليك سوى إعادة تشغيل السكربت بعد كل تحديث.
+التطبيق يتحدّث تلقائيًا والتحديث يستبدل الملف المُرقَّع. ما عليك سوى إعادة تشغيل سكربت نظامك بعد كل تحديث.
 
-> المسار الافتراضي `/opt/OpenCode/resources/app.asar`. إذا كان مثبتًا في مكان آخر: `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/desktop-rtl.sh`
+> المسارات الافتراضية: لينكس `/opt/OpenCode/resources/app.asar`، ماك `/Applications/OpenCode.app/Contents/Resources/app.asar`، ويندوز `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. إذا كان مثبتًا في مكان آخر: لينكس/ماك `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`، ويندوز `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -215,7 +251,7 @@ sudo bash patch/desktop-rtl.sh --unpatch
 npm ci
 npm run build      # tsc → dist/
 npm run typecheck
-npm test           # البناء + 14 اختبارًا
+npm test           # البناء + 15 اختبارًا (بما فيه محرك الرقعة)
 ```
 
 ## 📂 البنية
@@ -228,14 +264,20 @@ RTL_OpenCode/
 │   ├── tui.ts       ← أوامر TUI (RTL: Show Status / Analyze Sample)
 │   └── index.ts     ← المخرجات
 ├── test/core.test.js   ← الاختبارات
-├── patch/desktop-rtl.sh ← سكربت رقعة سطح المكتب
+├── patch/
+│   ├── lib/patch-asar.mjs      ← محرك الرقعة المشترك (جافاسكربت، كل الأنظمة)
+│   ├── linux/desktop-rtl.sh    ← رقعة سطح المكتب للينكس
+│   ├── macos/desktop-rtl.sh    ← رقعة سطح المكتب لماك
+│   └── windows/
+│       ├── desktop-rtl.ps1     ← رقعة سطح المكتب لويندوز
+│       └── desktop-rtl.cmd     ← مشغّل النقر المزدوج لويندوز
 ├── examples/opencode.json ← نموذج إعداد كامل
 └── dist/             ← ناتج البناء (مُرفَع)
 ```
 
 ## 🤖 CI والنشر (GitHub Actions)
 
-- **`.github/workflows/ci.yml`** — عند push/PR: تثبيت، typecheck، بناء، اختبار على Node 20/22/24 + التحقق من تطابق `dist` مع المصدر.
+- **`.github/workflows/ci.yml`** — عند push/PR: تثبيت، typecheck، بناء، اختبار على Node 20/22/24 + التحقق من تطابق `dist` مع المصدر + اختبارات نحوية ومحرك الرقعة لأنظمة التشغيل الثلاثة.
 - **`.github/workflows/release.yml`** — عند رفع وسم `v*`:
   - يُنشئ **Release** على GitHub مع حزمة (zip) + `npm pack` (.tgz)؛
   - إذا كان سر `NPM_TOKEN` مضبوطًا يُنشر تلقائيًا على **npm** (`opencode-rtl-fix`).

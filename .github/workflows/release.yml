@@ -51,8 +51,8 @@ jobs:
         run: |
           mkdir -p bundle
           cp -r dist bundle/dist
-          mkdir -p bundle/patch bundle/examples
-          cp patch/desktop-rtl.sh bundle/patch/
+          mkdir -p bundle/examples
+          cp -r patch bundle/patch
           cp examples/opencode.json bundle/examples/
           cp package.json LICENSE README.md README.en.md README.ar.md bundle/
           (cd bundle && zip -r ../opencode-rtl-fix-bundle.zip .)

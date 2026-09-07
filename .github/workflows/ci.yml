@@ -39,10 +39,26 @@ jobs:
           git diff --exit-code dist/ || { echo "dist/ is out of date — run 'npm run build' and commit the changes"; exit 1; }
 
   desktop-patch-syntax:
-    name: desktop-rtl.sh — basic syntax check
+    name: Desktop RTL patch — syntax + engine checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Syntax check the patch script
-        run: bash -n patch/desktop-rtl.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check shell patch scripts (Linux + macOS)
+        run: |
+          bash -n patch/linux/desktop-rtl.sh
+          bash -n patch/macos/desktop-rtl.sh
+
+      - name: Syntax check the shared Node engine
+        run: node --check patch/lib/patch-asar.mjs
+
+      - name: Run the desktop-patch engine tests
+        run: node --test test/patch-engine.test.js
