@@ -20,6 +20,13 @@ const HTML = `<html><head></head><body>
 </body></html>
 `
 const MARKERS = ["id=\"rtl-bidi-fix\"", "unicode-bidi: plaintext", "MutationObserver"]
+const TAB_SELECTORS = [
+  "[data-slot=\"tab-title\"]",
+  "[data-slot=\"terminal-tab-title\"]",
+  "[data-slot=\"user-message-text\"]",
+  "[data-slot=\"text-part-body\"]",
+  "[data-component=\"prompt-input\"]",
+]
 
 function runEngine(...args) {
   execFileSync(process.execPath, [ENGINE, ...args], { stdio: "inherit" })
@@ -61,6 +68,9 @@ test("patch engine: applies, backs up and unpatch-restores a fake asar", async (
 
     const patched = readHtml(archive)
     for (const marker of MARKERS) assert.ok(patched.includes(marker), `patched must contain ${marker}`)
+    for (const selector of TAB_SELECTORS)
+      assert.ok(patched.includes(selector), `patched CSS must contain ${selector}`)
+    assert.equal((patched.match(/unicode-bidi: plaintext/g) || []).length, 1, "the rules live in one block")
     assert.ok(existsSync(`${archive}.bak-rtl`), "backup must be created")
     assert.ok(
       existsSync(join(`${archive}.unpacked`, "node_modules", "native-demo", "index.node")),

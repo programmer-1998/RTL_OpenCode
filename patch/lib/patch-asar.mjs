@@ -43,7 +43,9 @@ const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
     [data-component="prompt-input"],
     [data-slot="user-message-text"],
     [data-slot="text-part-body"],
-    [data-component="text-part"] {
+    [data-component="text-part"],
+    [data-slot="tab-title"],
+    [data-slot="terminal-tab-title"] {
       unicode-bidi: plaintext;
       text-align: start;
     }

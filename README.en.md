@@ -58,6 +58,7 @@ This project solves the problem in **two complementary layers**:
 - ✅ Optional `OPENCODE_RTL*` env vars for tools
 - ✅ TUI status commands: `RTL: Show Status` and `RTL: Analyze Sample`
 - ✅ Desktop patch for all three OSes (Linux / macOS / Windows) with automatic backup, `app.asar.unpacked` layout verification and `--unpatch`
+- ✅ Fixes reversed text in the desktop **tab titles** (`[data-slot="tab-title"]`) and terminal tabs
 
 ## ⚠️ Important limitation (honest)
 
