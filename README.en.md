@@ -36,14 +36,14 @@ This project solves the problem in **two complementary layers**:
 
 | Layer | Tool | What it fixes |
 | --- | --- | --- |
-| **1) Text layer (opencode server)** | `server` plugin | Sent user messages, chat history, model replies and tool output — using Unicode **bidi isolates** (`RLI` / `LRI` / `PDI`) per UAX #9 |
-| **2) UI layer (Desktop)** | `patch/` scripts (Linux / macOS / Windows) | The **live prompt composer** that no plugin hook can touch — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` |
+| **1) Text layer (opencode server)** | `server` plugin | Sent user messages, chat history, model replies and tool output — using Unicode **bidi isolates** (`RLI` / `LRI` / `PDI`) per UAX #9. From opencode **1.18.31** the Terminal/Desktop renderer also applies `dir="auto"` + `unicode-bidi: plaintext` natively, so this layer focuses on the TUI/web and wording that the model keeps LTR tokens intact |
+| **2) UI layer (Desktop)** | `patch/` scripts (Linux / macOS / Windows) | The **live prompt composer** and the **tab/session titles** that no plugin hook can touch — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` |
 
 <details>
 <summary>🔍 How does it work?</summary>
 
 - **The plugin** hooks into opencode's server hooks (`chat.message`, `experimental.text.complete`, `tool.execute.after`, …). For each paragraph it resolves the direction via the **first-strong character** rule; RTL paragraphs are wrapped in `RLI…PDI`, and the English/code tokens inside them (like `SINA`, `/path/to/file`) are isolated with `LRI…PDI` so their order never flips. These Unicode control characters are **invisible** and have no effect on the model.
-- **The Desktop patch** appends a `<style>` and `<script>` to `out/renderer/index.html` inside `app.asar` so the app's Chromium auto-detects each paragraph's direction — the same thing `dir="auto"` does in modern browsers.
+- **The Desktop patch** appends a `<style>` and `<script>` to `out/renderer/index.html` inside `app.asar`. Since opencode **1.18.31** already fixes messages/replies natively, the patch targets only what the app still misses: the live composer (`[data-component="prompt-input"]`, `[data-component="prompt-input-v2"]`) and the window/tab titles (`[data-slot="tab-title"]`, `[data-slot="terminal-tab-title"]`), forcing `dir="auto"` + plaintext bidi on them.
 
 </details>
 

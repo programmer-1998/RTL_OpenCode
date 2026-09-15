@@ -39,8 +39,12 @@ import { dirname, join, sep } from "node:path"
 const require = createRequire(import.meta.url)
 
 const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
-    /* RTL/bidi fix: let each paragraph pick its own base direction. */
+    /* RTL/bidi fix: let each paragraph pick its own base direction.
+       Since opencode 1.18.31 the renderer already sets dir="auto" and
+       plaintext bidi on messages/markdown natively, so this only targets
+       the live composer and the tab/session titles. */
     [data-component="prompt-input"],
+    [data-component="prompt-input-v2"],
     [data-slot="user-message-text"],
     [data-slot="text-part-body"],
     [data-component="text-part"],
@@ -52,11 +56,14 @@ const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
   </style>
   <script id="rtl-bidi-fix" data-from="opencode-rtl-patch">
     (function () {
+      var targets = '[data-component="prompt-input"], [data-component="prompt-input-v2"]';
       function apply() {
-        var nodes = document.querySelectorAll('[data-component="prompt-input"]');
+        var nodes = document.querySelectorAll(targets);
         for (var i = 0; i < nodes.length; i++) {
           var el = nodes[i];
-          if (el.getAttribute("dir") === null) el.setAttribute("dir", "auto");
+          if (el && el.getAttribute && el.getAttribute("dir") === null) {
+            el.setAttribute("dir", "auto");
+          }
         }
       }
       apply();

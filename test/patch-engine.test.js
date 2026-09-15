@@ -26,6 +26,7 @@ const TAB_SELECTORS = [
   "[data-slot=\"user-message-text\"]",
   "[data-slot=\"text-part-body\"]",
   "[data-component=\"prompt-input\"]",
+  "[data-component=\"prompt-input-v2\"]",
 ]
 
 function runEngine(...args) {

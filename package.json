@@ -64,7 +64,7 @@
   ],
   "devDependencies": {
     "@electron/asar": "^3.2.12",
-    "@opencode-ai/plugin": "^1.18.18",
+    "@opencode-ai/plugin": "^1.18.31",
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3"
   }
