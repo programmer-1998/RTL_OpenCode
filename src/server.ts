@@ -22,16 +22,19 @@ export const server: Plugin = async ({ client }, options?: PluginOptions) => {
     },
 
     "chat.message": async (_input, output) => {
-      if (!settings.enabled || settings.isolateUserMessages === "off") return
+      if (!settings.enabled) return
+      const clean = !settings.inlineControls
+      if (!clean && settings.isolateUserMessages === "off") return
       for (const part of output.parts) {
         mutateTextFields(part, (value) => formatBidiText(value, settings.isolateUserMessages, modelTextSettings))
       }
     },
 
     "experimental.chat.messages.transform": async (_input, output) => {
-      if (!settings.enabled || settings.isolateUserMessages === "off") return
+      if (!settings.enabled) return
+      const clean = !settings.inlineControls
       for (const message of output.messages) {
-        if (message.info.role !== "user") continue
+        if (!clean && (message.info.role !== "user" || settings.isolateUserMessages === "off")) continue
         for (const part of message.parts) {
           mutateTextFields(part, (value) => formatBidiText(value, settings.isolateUserMessages, modelTextSettings))
         }
