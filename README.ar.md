@@ -12,6 +12,8 @@
 
 **اللغات:** [🇮🇷 فارسی](README.md) · [🇬🇧 English](README.en.md) · [🇸🇦 العربية](README.ar.md)
 
+**👤 المنشئ:** [سينا خانزاده](https://sina-khanzadeh.ir) · المعرف: `programmer_1998` (ديسكورد / تيليجرام / إنستغرام) · البريد: khanzadeh.1377@gmail.com
+
 <img src="example.png" alt="إصلاح RTL لأوبن‌كود أثناء العمل — النص الفارسي والإنجليزي يُعرض دون خلط" width="800">
 
 </div>
@@ -302,6 +304,15 @@ RTL_OpenCode/
 
 ---
 
+## 👤 المنشئ
+
+هذا المشروع من إنشاء **سينا خانزاده**.
+
+- 🌐 الموقع الشخصي: [sina-khanzadeh.ir](https://sina-khanzadeh.ir)
+- 📧 البريد: [khanzadeh.1377@gmail.com](mailto:khanzadeh.1377@gmail.com)
+- 🆔 معرف موحّد على مواقع التواصل: `programmer_1998` (ديسكورد · تيليجرام · إنستغرام)
+- 📦 جيت‌هاب: [programmer-1998/RTL_OpenCode](https://github.com/programmer-1998/RTL_OpenCode)
+
 ## 🙏 الشكر والإسناد
 
 - **أوبن‌كود** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
@@ -314,6 +325,6 @@ RTL_OpenCode/
 
 ## 📄 الترخيص
 
-[MIT](LICENSE) © sina khanzadeh
+[MIT](LICENSE) © سينا خانزاده — sina-khanzadeh.ir · khanzadeh.1377@gmail.com
 
 </div>

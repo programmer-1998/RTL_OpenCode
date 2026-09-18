@@ -12,6 +12,8 @@
 
 **Languages:** [🇮🇷 فارسی](README.md) · [🇬🇧 English](README.en.md) · [🇸🇦 العربية](README.ar.md)
 
+**👤 Author:** [Sina Khanzadeh](https://sina-khanzadeh.ir) · ID: `programmer_1998` (Discord / Telegram / Instagram) · Email: khanzadeh.1377@gmail.com
+
 </p>
 
 <p align="center">
@@ -302,6 +304,15 @@ RTL_OpenCode/
 
 ---
 
+## 👤 Author
+
+This project was built by **Sina Khanzadeh**.
+
+- 🌐 Personal site: [sina-khanzadeh.ir](https://sina-khanzadeh.ir)
+- 📧 Email: [khanzadeh.1377@gmail.com](mailto:khanzadeh.1377@gmail.com)
+- 🆔 Same ID across social media: `programmer_1998` (Discord · Telegram · Instagram)
+- 📦 GitHub: [programmer-1998/RTL_OpenCode](https://github.com/programmer-1998/RTL_OpenCode)
+
 ## 🙏 Credits
 
 - **opencode** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
@@ -314,4 +325,4 @@ RTL_OpenCode/
 
 ## 📄 License
 
-[MIT](LICENSE) © sina khanzadeh
+[MIT](LICENSE) © Sina Khanzadeh — sina-khanzadeh.ir · khanzadeh.1377@gmail.com

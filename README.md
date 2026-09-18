@@ -12,6 +12,8 @@
 
 **زبان‌ها:** [🇮🇷 فارسی](README.md) · [🇬🇧 English](README.en.md) · [🇸🇦 العربية](README.ar.md)
 
+**👤 سازنده:** [سینا خانزاده](https://sina-khanzadeh.ir) · آیدی: `programmer_1998` (دیسکورد / تلگرام / اینستاگرام) · ایمیل: khanzadeh.1377@gmail.com
+
 <img src="example.png" alt="پلاگین RTL اوپن‌کد در حال اجرا — متن فارسی و انگلیسی بدون بهمریختگی نمایش داده می‌شود" width="800">
 
 </div>
@@ -302,6 +304,15 @@ RTL_OpenCode/
 
 ---
 
+## 👤 سازنده
+
+این پروژه توسط **سینا خانزاده** ساخته شده است.
+
+- 🌐 وبسایت شخصی: [sina-khanzadeh.ir](https://sina-khanzadeh.ir)
+- 📧 ایمیل: [khanzadeh.1377@gmail.com](mailto:khanzadeh.1377@gmail.com)
+- 🆔 آیدی یکسان در شبکه‌های اجتماعی: `programmer_1998` (دیسکورد · تلگرام · اینستاگرام)
+- 📦 گیت‌هاب: [programmer-1998/RTL_OpenCode](https://github.com/programmer-1998/RTL_OpenCode)
+
 ## 🙏 اعتبارات (Credits)
 
 - **opencode** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
@@ -314,6 +325,6 @@ RTL_OpenCode/
 
 ## 📄 مجوز
 
-[MIT](LICENSE) © sina khanzadeh
+[MIT](LICENSE) © سینا خانزاده — sina-khanzadeh.ir · khanzadeh.1377@gmail.com
 
 </div>
