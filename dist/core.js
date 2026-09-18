@@ -27,6 +27,7 @@ const DEFAULT_OPTIONS = {
     isolateUserMessages: "auto",
     isolateAssistantText: "auto",
     isolateToolOutput: "off",
+    inlineControls: false,
     minRtlRatio: 0.2,
     minRtlCharacters: 2,
     digitMode: "preserve",
@@ -46,6 +47,7 @@ export function normalizeOptions(input) {
         isolateUserMessages: readIsolation(raw.isolateUserMessages, DEFAULT_OPTIONS.isolateUserMessages),
         isolateAssistantText: readIsolation(raw.isolateAssistantText, DEFAULT_OPTIONS.isolateAssistantText),
         isolateToolOutput: readIsolation(raw.isolateToolOutput, DEFAULT_OPTIONS.isolateToolOutput),
+        inlineControls: readBoolean(raw.inlineControls, DEFAULT_OPTIONS.inlineControls),
         minRtlRatio: readNumber(raw.minRtlRatio, DEFAULT_OPTIONS.minRtlRatio, 0, 1),
         minRtlCharacters: Math.max(0, Math.trunc(readNumber(raw.minRtlCharacters, DEFAULT_OPTIONS.minRtlCharacters, 0, 1000))),
         digitMode: readDigitMode(raw.digitMode, DEFAULT_OPTIONS.digitMode),
@@ -154,8 +156,13 @@ export function detectLanguage(text) {
 export function formatBidiText(text, mode, options) {
     if (!options.enabled)
         return text;
+    if (mode === "off")
+        return text;
     if (!text.trim())
         return text;
+    if (!options.inlineControls) {
+        return applyDigitMode(stripDirectionalControls(text), options.digitMode);
+    }
     if (options.alignRtlParagraphs) {
         return alignAndIsolate(text, mode, options);
     }
@@ -221,6 +228,7 @@ export function statusText(options) {
         `user=${options.isolateUserMessages}`,
         `assistant=${options.isolateAssistantText}`,
         `tools=${options.isolateToolOutput}`,
+        `inline=${String(options.inlineControls)}`,
         `digits=${options.digitMode}`,
         `force=${options.forceDirection}`,
         `align=${String(options.alignRtlParagraphs)}`,

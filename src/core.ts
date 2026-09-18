@@ -17,6 +17,7 @@ export type RtlPluginOptions = {
   isolateUserMessages?: IsolationOption
   isolateAssistantText?: IsolationOption
   isolateToolOutput?: IsolationOption
+  inlineControls?: boolean
   minRtlRatio?: number
   minRtlCharacters?: number
   digitMode?: DigitMode
@@ -35,6 +36,7 @@ export type NormalizedRtlOptions = {
   isolateUserMessages: IsolationMode
   isolateAssistantText: IsolationMode
   isolateToolOutput: IsolationMode
+  inlineControls: boolean
   minRtlRatio: number
   minRtlCharacters: number
   digitMode: DigitMode
@@ -93,6 +95,7 @@ const DEFAULT_OPTIONS: NormalizedRtlOptions = {
   isolateUserMessages: "auto",
   isolateAssistantText: "auto",
   isolateToolOutput: "off",
+  inlineControls: false,
   minRtlRatio: 0.2,
   minRtlCharacters: 2,
   digitMode: "preserve",
@@ -113,6 +116,7 @@ export function normalizeOptions(input: unknown): NormalizedRtlOptions {
     isolateUserMessages: readIsolation(raw.isolateUserMessages, DEFAULT_OPTIONS.isolateUserMessages),
     isolateAssistantText: readIsolation(raw.isolateAssistantText, DEFAULT_OPTIONS.isolateAssistantText),
     isolateToolOutput: readIsolation(raw.isolateToolOutput, DEFAULT_OPTIONS.isolateToolOutput),
+    inlineControls: readBoolean(raw.inlineControls, DEFAULT_OPTIONS.inlineControls),
     minRtlRatio: readNumber(raw.minRtlRatio, DEFAULT_OPTIONS.minRtlRatio, 0, 1),
     minRtlCharacters: Math.max(
       0,
@@ -233,7 +237,12 @@ export function detectLanguage(text: string): RtlLanguage | "unknown" {
 
 export function formatBidiText(text: string, mode: IsolationMode, options: NormalizedRtlOptions): string {
   if (!options.enabled) return text
+  if (mode === "off") return text
   if (!text.trim()) return text
+
+  if (!options.inlineControls) {
+    return applyDigitMode(stripDirectionalControls(text), options.digitMode)
+  }
 
   if (options.alignRtlParagraphs) {
     return alignAndIsolate(text, mode, options)
@@ -303,6 +312,7 @@ export function statusText(options: NormalizedRtlOptions): string {
     `user=${options.isolateUserMessages}`,
     `assistant=${options.isolateAssistantText}`,
     `tools=${options.isolateToolOutput}`,
+    `inline=${String(options.inlineControls)}`,
     `digits=${options.digitMode}`,
     `force=${options.forceDirection}`,
     `align=${String(options.alignRtlParagraphs)}`,

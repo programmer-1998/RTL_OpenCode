@@ -42,7 +42,7 @@ This project solves the problem in **two complementary layers**:
 <details>
 <summary>🔍 How does it work?</summary>
 
-- **The plugin** hooks into opencode's server hooks (`chat.message`, `experimental.text.complete`, `tool.execute.after`, …). For each paragraph it resolves the direction via the **first-strong character** rule; RTL paragraphs are wrapped in `RLI…PDI`, and the English/code tokens inside them (like `SINA`, `/path/to/file`) are isolated with `LRI…PDI` so their order never flips. These Unicode control characters are **invisible** and have no effect on the model.
+- **The plugin** hooks into opencode's server hooks (`chat.message`, `experimental.text.complete`, `tool.execute.after`, …). For each paragraph it resolves the direction via the **first-strong character** rule; RTL paragraphs are wrapped in `RLI…PDI`, and the English/code tokens inside them (like `SINA`, `/path/to/file`) are isolated with `LRI…PDI` so their order never flips. These Unicode control characters can upset naive cell-by-cell terminal renderers and pollute the buffer fed to the model (e.g. `^` noise), so this wrapping is **opt-in** via `inlineControls: true`. By default the plugin injects no control characters and additionally **strips** any direction-control chars already stuck to the text.
 - **The Desktop patch** appends a `<style>` and `<script>` to `out/renderer/index.html` inside `app.asar`. Since opencode **1.18.31** already fixes messages/replies natively, the patch targets only what the app still misses: the live composer (`[data-component="prompt-input"]`, `[data-component="prompt-input-v2"]`) and the window/tab titles (`[data-slot="tab-title"]`, `[data-slot="terminal-tab-title"]`), forcing `dir="auto"` + plaintext bidi on them.
 
 </details>
@@ -136,6 +136,7 @@ Put the plugin in one of these project-local folders and opencode will find it w
 | `isolateUserMessages` | `"auto"` | `off` / `auto` / `always` — isolate user messages |
 | `isolateAssistantText` | `"auto"` | Isolate model replies |
 | `isolateToolOutput` | `"off"` | Isolate tool output (keep `off` if exact copy/paste matters) |
+| `inlineControls` | `false` | Never inject invisible Unicode control chars (`RLI`/`LRI`/`PDI`) into text. In the default mode the plugin also **strips** direction-control chars already stuck to the text (e.g. LRM/RLM pasted from the web) so the terminal buffer and the model context stay clean — this prevents `^` rendering noise. Set `true` for manual isolate wrapping |
 | `minRtlRatio` | `0.2` | Minimum RTL character ratio for auto-detection |
 | `minRtlCharacters` | `2` | Minimum RTL character count |
 | `digitMode` | `"preserve"` | Digit conversion: `preserve` / `latin` / `arabic-indic` / `eastern-arabic` |
@@ -147,6 +148,16 @@ Put the plugin in one of these project-local folders and opencode will find it w
 | `debug` | `false` | Log via `client.app.log()` |
 
 > **Direction note:** direction follows the *first strong character* — a sentence starting with Persian becomes RTL, one starting with English/code becomes LTR. To force everything RTL: `"forceDirection": "rtl"`.
+
+---
+
+## 🔧 Troubleshooting: `^` rendering noise in the terminal
+
+If you see extra characters such as `^^^^^` while RTL text renders in the TUI, the cause is **invisible Unicode characters** — bidi isolates (`U+2066`/`U+2067`/`U+2069`) or LRM/RLM stuck to text pasted from the web — that a naive cell-by-cell renderer miscalculates. What this plugin does:
+
+- Since this version, control characters are **not injected** by default and any direction-control chars already present are **stripped** from the flowing text (`inlineControls: false`).
+- If you manually set `inlineControls: true` and see noise, turn it back off.
+- Old sessions created with previous plugin versions may still carry these characters in stored text; start a new session.
 
 ---
 
@@ -252,7 +263,7 @@ The app auto-updates and the update replaces the patched file. Just re-run your 
 npm ci
 npm run build      # tsc → dist/
 npm run typecheck
-npm test           # build + 15 tests (incl. the desktop-patch engine)
+npm test           # build + tests (incl. the desktop-patch engine)
 ```
 
 ## 📂 Structure

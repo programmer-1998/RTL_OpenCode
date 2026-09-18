@@ -9,6 +9,7 @@
         "isolateUserMessages": "auto",
         "isolateAssistantText": "auto",
         "isolateToolOutput": "off",
+        "inlineControls": false,
         "minRtlRatio": 0.2,
         "minRtlCharacters": 2,
         "digitMode": "preserve",

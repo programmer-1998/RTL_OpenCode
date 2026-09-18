@@ -14,6 +14,7 @@ export type RtlPluginOptions = {
     isolateUserMessages?: IsolationOption;
     isolateAssistantText?: IsolationOption;
     isolateToolOutput?: IsolationOption;
+    inlineControls?: boolean;
     minRtlRatio?: number;
     minRtlCharacters?: number;
     digitMode?: DigitMode;
@@ -31,6 +32,7 @@ export type NormalizedRtlOptions = {
     isolateUserMessages: IsolationMode;
     isolateAssistantText: IsolationMode;
     isolateToolOutput: IsolationMode;
+    inlineControls: boolean;
     minRtlRatio: number;
     minRtlCharacters: number;
     digitMode: DigitMode;
