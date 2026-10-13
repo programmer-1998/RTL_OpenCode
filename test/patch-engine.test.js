@@ -27,6 +27,15 @@ const TAB_SELECTORS = [
   "[data-slot=\"text-part-body\"]",
   "[data-component=\"prompt-input\"]",
   "[data-component=\"prompt-input-v2\"]",
+  // v2 full coverage: composer, menus/dialogs/toasts, settings, files/review
+  "[data-component=\"session-composer-dock\"]",
+  "[data-slot=\"file-tree-v2-row\"]",
+  "[data-slot=\"session-review-filename\"]",
+  "[data-slot=\"attachment-card-title\"]",
+  "[data-slot=\"question-option\"]",
+  "[data-slot=\"permission-body\"]",
+  "[data-slot=\"toast-v2-header\"]",
+  ".settings-tab-title",
 ]
 
 function runEngine(...args) {

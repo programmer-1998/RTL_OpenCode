@@ -58,9 +58,10 @@ This project solves the problem in **two complementary layers**:
 - ✅ Automatic direction detection (first-strong character) + optional forced `rtl`/`ltr`
 - ✅ Optional system-guidance so the model answers in your language and keeps code/paths LTR
 - ✅ Optional `OPENCODE_RTL*` env vars for tools
-- ✅ TUI status commands: `RTL: Show Status` and `RTL: Analyze Sample`
+- ✅ TUI status commands: `RTL: Show Status` and `RTL: Analyze Sample` (also on v2 via the new CLI API)
 - ✅ Desktop patch for all three OSes (Linux / macOS / Windows) with automatic backup, `app.asar.unpacked` layout verification and `--unpatch`
-- ✅ Fixes reversed text in the desktop **tab titles** (`[data-slot="tab-title"]`) and terminal tabs
+- ✅ Full desktop UI coverage: chat & composer, session and terminal tabs, menus, dialogs, toasts, settings, file tree & file viewer, review panel, attachments, permissions and questions — with LTR protection for code/diffs/shell output
+- ✅ Compatible with opencode **1.19.0** and **2.x** (`./v2` server entry, `./v2/tui` CLI entry)
 
 ## ⚠️ Important limitation (honest)
 
@@ -124,6 +125,29 @@ Put the plugin in one of these project-local folders and opencode will find it w
 .opencode/plugin/rtl/dist/…
 ```
 
+### Option 4 — opencode 2 (v2)
+
+In v2 the `plugin` key was renamed to `plugins`, and the TUI plugin is configured separately in `cli.json`:
+
+```jsonc
+// opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    { "package": "opencode-rtl-fix", "options": { "language": "auto" } }
+  ]
+}
+```
+
+```jsonc
+// cli.json (for the RTL terminal commands)
+{
+  "plugins": ["opencode-rtl-fix"]
+}
+```
+
+This package ships both APIs: a `./v2` server entry (v2 `ctx.session.hook`) and a `./v2/tui` CLI entry. Hook mapping: `chat.message` → `prompt`, `system.transform` → `context/compaction/generate/title`, `tool.execute.after` → `tool.hook("execute.after")`, `shell.env` → `shell.hook("create.before")`.
+
 > 💡 Layer 1 (the server plugin, written in JavaScript) behaves **exactly the same on Linux, macOS and Windows**. Only the Desktop patch (layer 2) has a separate file per OS — see below.
 
 ---
@@ -163,9 +187,9 @@ If you see extra characters such as `^^^^^` while RTL text renders in the TUI, t
 
 ---
 
-## 🖥️ Desktop app patch (for the composer)
+## 🖥️ Desktop app patch (full UI coverage)
 
-The Electron app renders text without any automatic direction. The patch appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so the composer and messages behave exactly like in modern browsers.
+The Electron app renders parts of its text without any automatic direction. The patch appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so **every text surface** — chat & composer, tabs, menus, dialogs, toasts, settings, file tree/viewer, review panel, attachments, permissions and questions — behaves exactly like in modern browsers (code, diffs and shell output intentionally stay LTR).
 
 The patch is powered by a **shared JavaScript engine** (`patch/lib/patch-asar.mjs`) that runs identically on all three OSes; only the per-OS **wrapper** locates the app and takes the needed privileges (sudo / UAC):
 
@@ -274,8 +298,11 @@ npm test           # build + tests (incl. the desktop-patch engine)
 RTL_OpenCode/
 ├── src/
 │   ├── core.ts      ← bidi engine: direction detection, isolates, markdown/code, alignment
-│   ├── server.ts    ← server hooks (Plugin)
-│   ├── tui.ts       ← TUI commands (RTL: Show Status / Analyze Sample)
+│   ├── server.ts    ← server hooks, v1 (1.19)
+│   ├── tui.ts       ← TUI commands in v1
+│   └── index.ts     ← exports
+├── plugin-v2.ts     ← v2 server plugin (opencode 2, `./v2`)
+├── tui-v2.ts        ← v2 CLI plugin (RTL commands, `./v2/tui`)
 │   └── index.ts     ← exports
 ├── test/core.test.js   ← tests
 ├── patch/

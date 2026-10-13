@@ -39,30 +39,127 @@ import { dirname, join, sep } from "node:path"
 const require = createRequire(import.meta.url)
 
 const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
-    /* RTL/bidi fix: let each paragraph pick its own base direction.
-       Since opencode 1.18.31 the renderer already sets dir="auto" and
-       plaintext bidi on messages/markdown natively, so this only targets
-       the live composer and the tab/session titles. */
+    /* RTL/bidi fix v2: every human-readable surface picks its own base
+       direction per paragraph (UAX #9 plaintext), code stays LTR.
+       Newer opencode already sets dir="auto" natively on messages, the
+       composer and session tabs; these rules keep older builds correct and
+       extend the same behavior to terminal tabs, menus, dialogs, toasts,
+       settings, file/review/browser labels, permissions and questions. */
     [data-component="prompt-input"],
     [data-component="prompt-input-v2"],
+    [data-component="session-composer-dock"],
+    [data-component="dock-prompt"],
+    [data-component="text-input-v2"],
     [data-slot="user-message-text"],
+    [data-slot="user-message-body"],
     [data-slot="text-part-body"],
     [data-component="text-part"],
+    [data-component="user-message"],
+    [data-component="assistant-message"],
+    [data-slot="session-turn-content"],
+    [data-slot="session-turn-message-content"],
+    [data-slot="session-turn-retry-message"],
+    [data-slot="answer-text"],
+    [data-slot="question-text"],
+    [data-slot="question-body"],
+    [data-slot="question-content"],
+    [data-slot="question-option"],
+    [data-slot="question-minimized-summary"],
+    [data-slot="permission-body"],
+    [data-slot="permission-header-title"],
+    [data-slot="permission-hint"],
     [data-slot="tab-title"],
-    [data-slot="terminal-tab-title"] {
+    [data-slot="terminal-tab-title"],
+    [data-titlebar-tab-title],
+    [data-slot="file-tree-v2-row"],
+    [data-slot="filename"],
+    [data-slot="session-review-title"],
+    [data-slot="session-review-filename"],
+    [data-slot="session-review-file-name-container"],
+    [data-slot="session-review-v2-file-title"],
+    [data-slot="session-review-v2-file-name"],
+    [data-slot="session-review-v2-file-path"],
+    [data-slot="session-review-v2-sidebar-title"],
+    [data-slot="session-review-v2-toolbar-title"],
+    [data-slot="session-turn-diff-filename"],
+    [data-slot="apply-patch-filename"],
+    [data-slot="attachment-card-title"],
+    [data-slot="attachment-card-label"],
+    [data-slot="user-message-attachment-name"],
+    [data-slot="message-nav-title-preview"],
+    [data-slot="diagnostic-message"],
+    [data-slot="tool-status-title"],
+    [data-slot="basic-tool-tool-title"],
+    [data-slot="basic-tool-tool-subtitle"],
+    [data-slot="webfetch-link-text"],
+    [data-slot="toast-v2-header"],
+    [data-slot="tooltip"],
+    [role="menu"],
+    [role="menuitem"],
+    [role="dialog"],
+    [role="alertdialog"],
+    .settings-tab-title {
       unicode-bidi: plaintext;
       text-align: start;
+    }
+    /* Code, diffs, shell output and paths must stay strictly LTR. */
+    pre,
+    code,
+    kbd,
+    samp,
+    [data-component="code"],
+    [data-component="markdown-code"],
+    [data-component="bash-output"],
+    [data-component="diff"],
+    [data-component="tool-output"],
+    [data-slot="bash-pre"],
+    [data-slot="bash-command"],
+    [data-slot="bash-result"],
+    [data-slot="diff-hunk-separator-content"],
+    [data-slot="attachment-card-subtitle"] {
+      direction: ltr;
+      unicode-bidi: isolate;
+      text-align: left;
     }
   </style>
   <script id="rtl-bidi-fix" data-from="opencode-rtl-patch">
     (function () {
-      var targets = '[data-component="prompt-input"], [data-component="prompt-input-v2"]';
+      var textTargets = [
+        '[data-component="prompt-input"]',
+        '[data-component="prompt-input-v2"]',
+        '[data-component="session-composer-dock"]',
+        '[data-component="dock-prompt"]',
+        '[data-component="text-input-v2"]',
+        '[data-slot="user-message-text"]',
+        '[data-slot="text-part-body"]',
+        '[data-slot="tab-title"]',
+        '[data-slot="terminal-tab-title"]',
+        '[data-titlebar-tab-title]',
+        '[data-slot="file-tree-v2-row"]',
+        '[data-slot="session-review-filename"]',
+        '[data-slot="session-review-v2-file-name"]',
+        '[data-slot="attachment-card-title"]',
+        '[data-slot="question-option"]',
+        '[data-slot="permission-body"]',
+        '[data-slot="toast-v2-header"]',
+        '[role="menuitem"]',
+        '[role="dialog"]',
+        '.settings-tab-title'
+      ].join(',');
+      var ltrTargets = 'pre, code, kbd, samp, [data-component="bash-output"], [data-component="diff"], [data-slot="bash-pre"]';
       function apply() {
-        var nodes = document.querySelectorAll(targets);
+        var nodes = document.querySelectorAll(textTargets);
         for (var i = 0; i < nodes.length; i++) {
           var el = nodes[i];
           if (el && el.getAttribute && el.getAttribute("dir") === null) {
             el.setAttribute("dir", "auto");
+          }
+        }
+        var ltr = document.querySelectorAll(ltrTargets);
+        for (var j = 0; j < ltr.length; j++) {
+          var c = ltr[j];
+          if (c && c.getAttribute && c.getAttribute("dir") === null) {
+            c.setAttribute("dir", "ltr");
           }
         }
       }

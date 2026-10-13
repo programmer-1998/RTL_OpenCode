@@ -20,20 +20,24 @@
     "./tui": {
       "types": "./dist/tui.d.ts",
       "import": "./dist/tui.js"
-    }
+    },
+    "./v2": "./plugin-v2.ts",
+    "./v2/tui": "./tui-v2.ts"
   },
   "files": [
     "dist",
     "src",
     "patch",
     "examples",
+    "plugin-v2.ts",
+    "tui-v2.ts",
     "README.md",
     "README.en.md",
     "README.ar.md",
     "LICENSE"
   ],
   "engines": {
-    "opencode": ">=1.17.0"
+    "opencode": ">=1.18.29"
   },
   "repository": {
     "type": "git",
@@ -64,7 +68,7 @@
   ],
   "devDependencies": {
     "@electron/asar": "^3.2.12",
-    "@opencode-ai/plugin": "^1.18.31",
+    "@opencode-ai/plugin": "^1.19.0",
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3"
   }

@@ -1,0 +1,4 @@
+{
+  "$schema": "https://opencode.ai/cli.json",
+  "plugins": ["opencode-rtl-fix"]
+}
