@@ -35,10 +35,41 @@ import {
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, sep } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const require = createRequire(import.meta.url)
 
-const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
+// Vazirmatn (variable, OFL-1.1) is embedded as a data URL so the Desktop app
+// needs no installed font and no network. `null` when the file is missing.
+const FONT_PATH = fileURLToPath(new URL("../fonts/Vazirmatn-Variable.woff2", import.meta.url))
+
+// Bump when the injected payload changes so existing installs get upgraded
+// instead of being treated as "already patched".
+const PATCH_VERSION = 2
+const VERSION_MARKER = `data-rtl-version="${PATCH_VERSION}"`
+
+// The app sets `--font-family-sans` inline from Settings -> Appearance, so the
+// override needs !important. `--font-family-text` is defined as
+// `var(--font-family-sans)`, so overriding sans covers both. Delete this block
+// if you would rather keep the app's own font choice.
+function fontCss() {
+  if (!existsSync(FONT_PATH)) return ""
+  const data = readFileSync(FONT_PATH).toString("base64")
+  return `    @font-face {
+      font-family: "Vazirmatn";
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url(data:font/woff2;base64,${data}) format("woff2");
+    }
+    :root {
+      --font-family-sans: "Vazirmatn", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    }
+`
+}
+
+const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch" ${VERSION_MARKER}>
+${fontCss()}
     /* RTL/bidi fix v2: every human-readable surface picks its own base
        direction per paragraph (UAX #9 plaintext), code stays LTR.
        Newer opencode already sets dir="auto" natively on messages, the
@@ -101,6 +132,14 @@ const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
     .settings-tab-title {
       unicode-bidi: plaintext;
       text-align: start;
+    }
+    /* v2.0.29 renders every markdown block inside a display:contents
+       wrapper, so the app's own [data-component=markdown]>* rule lands on
+       that wrapper; unicode-bidi is not inherited, so the real <p>/<li>
+       blocks miss it and all inherit one direction for the whole message
+       (Persian sentence endings jump to the wrong side). Target the blocks. */
+    [data-component="markdown"] :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, dd, dt, figcaption, td, th, summary) {
+      unicode-bidi: plaintext;
     }
     /* Code, diffs, shell output and paths must stay strictly LTR. */
     pre,
@@ -174,6 +213,11 @@ const INJECT = `  <style id="rtl-bidi-fix" data-from="opencode-rtl-patch">
 
 const MARKER = 'id="rtl-bidi-fix"'
 const ARCHIVE = '<script type="module"'
+
+// Drop a previously injected block (any version) so it can be re-injected.
+function stripInjection(html) {
+  return html.replace(/\s*<style id="rtl-bidi-fix"[\s\S]*?<\/script>/, "")
+}
 
 const say = (msg) => console.log(`[i] ${msg}`)
 const warn = (msg) => console.error(`[w] ${msg}`)
@@ -260,6 +304,25 @@ function fixMode(p) {
   }
 }
 
+// `<asar>.rtl-stamp` records the patched file's size+mtime so the plugin guard
+// can skip work without unpacking the archive.
+function writeStamp(asarPath) {
+  try {
+    const s = statSync(asarPath)
+    writeFileSync(`${asarPath}.rtl-stamp`, `v${PATCH_VERSION}:${s.size}:${Math.trunc(s.mtimeMs)}`)
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearStamp(asarPath) {
+  try {
+    rmSync(`${asarPath}.rtl-stamp`, { force: true })
+  } catch {
+    /* ignore */
+  }
+}
+
 function parseArgs(argv) {
   const opts = { asar: process.env.DESKTOP_ASAR || "", unpatch: false, noBackup: false }
   for (let i = 0; i < argv.length; i++) {
@@ -292,6 +355,7 @@ async function main() {
     if (!existsSync(backupPath)) die(`no backup at ${backupPath}`)
     copyFileSync(backupPath, asarPath)
     fixMode(asarPath)
+    clearStamp(asarPath)
     say(`restored ${backupPath} -> ${asarPath}`)
     say("restart opencode Desktop.")
     return
@@ -314,15 +378,18 @@ async function main() {
     if (!existsSync(html)) die("out/renderer/index.html not found in this app version")
 
     const original = readFileSync(html, "utf8")
-    if (original.includes(MARKER)) {
+    const hadPatch = original.includes(MARKER)
+    if (hadPatch && original.includes(VERSION_MARKER)) {
+      writeStamp(asarPath)
       say("already patched, nothing to do.")
       return
     }
 
-    say("injecting RTL/bidi style + script into index.html")
-    const idx = original.indexOf(ARCHIVE)
+    const base = hadPatch ? stripInjection(original) : original
+    say(hadPatch ? "upgrading existing RTL patch" : "injecting RTL/bidi style + script into index.html")
+    const idx = base.indexOf(ARCHIVE)
     if (idx === -1) die("cannot locate module script anchor")
-    writeFileSync(html, original.slice(0, idx) + INJECT + original.slice(idx), "utf8")
+    writeFileSync(html, base.slice(0, idx) + INJECT + base.slice(idx), "utf8")
 
     const unpackDir = `${dirname(asarPath)}${sep}app.asar.unpacked`
     const unpackGlob = deriveUnpackGlob(unpackDir)
@@ -347,6 +414,7 @@ async function main() {
 
     copyFileSync(newAsar, asarPath)
     fixMode(asarPath)
+    writeStamp(asarPath)
     say("installed patched app.asar")
     say("done. restart opencode Desktop to apply the patch.")
   } finally {

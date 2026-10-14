@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "opencode-rtl-fix",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Bidirectional (RTL/LTR) text fix for opencode — Unicode UAX #9 isolates for terminal/TUI, Desktop and web, plus an Electron app patch for the live prompt composer.",
   "type": "module",
   "license": "MIT",
@@ -67,9 +67,11 @@
     "urdu"
   ],
   "devDependencies": {
-    "@electron/asar": "^3.2.12",
     "@opencode-ai/plugin": "^1.19.0",
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@electron/asar": "^3.2.12"
   }
 }

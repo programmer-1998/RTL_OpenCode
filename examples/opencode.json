@@ -16,7 +16,8 @@
         "forceDirection": "auto",
         "alignRtlParagraphs": false,
         "rtlWrapColumn": 96,
-        "rtlAlignColumn": 96
+        "rtlAlignColumn": 96,
+        "desktop": true
       }
     ]
   ]

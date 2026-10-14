@@ -15,6 +15,7 @@
 //    covered by sanitizing context messages + system guidance.)
 import { Plugin } from "@opencode/plugin"
 import { formatBidiText, normalizeOptions, statusText, systemPrompt } from "./dist/core.js"
+import { ensureDesktopPatch } from "./dist/desktop.js"
 
 const ID = "opencode-rtl-fix"
 
@@ -49,6 +50,7 @@ export default {
       const fmtUser = (s) => formatBidiText(s, userMode, plain)
       const fmtAssistant = (s) => formatBidiText(s, assistantMode, plain)
 
+      ensureDesktopPatch({ enabled: settings.desktop, log: (message) => console.log(`[${ID}] ${message}`) })
       console.log(`[${ID}] initialized (${statusText(settings)})`)
 
       // 1) Prompt admission — the v2 equivalent of v1 `chat.message`.

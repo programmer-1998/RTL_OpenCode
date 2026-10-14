@@ -23,6 +23,8 @@ export type RtlPluginOptions = {
     rtlWrapColumn?: number;
     rtlAlignColumn?: number;
     directionEnv?: boolean;
+    /** Keep the Desktop app's app.asar bidi/font patch applied (self-heal). */
+    desktop?: boolean;
     debug?: boolean;
 };
 export type NormalizedRtlOptions = {
@@ -41,6 +43,7 @@ export type NormalizedRtlOptions = {
     rtlWrapColumn: number;
     rtlAlignColumn: number;
     directionEnv: boolean;
+    desktop: boolean;
     debug: boolean;
 };
 export type DirectionAnalysis = {

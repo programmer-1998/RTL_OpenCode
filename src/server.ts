@@ -7,12 +7,14 @@ import {
   systemPrompt,
   type NormalizedRtlOptions,
 } from "./core.js"
+import { ensureDesktopPatch } from "./desktop.js"
 
 type MutableRecord = Record<string, unknown>
 
 export const server: Plugin = async ({ client }, options?: PluginOptions) => {
   const settings = normalizeOptions(options)
   const modelTextSettings: NormalizedRtlOptions = { ...settings, alignRtlParagraphs: false }
+  ensureDesktopPatch({ enabled: settings.desktop, log: (message) => void log(client, settings, "info", message) })
   await log(client, settings, "info", "initialized", { status: statusText(settings) })
 
   const hooks: Hooks = {

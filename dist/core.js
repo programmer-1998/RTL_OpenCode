@@ -36,6 +36,7 @@ const DEFAULT_OPTIONS = {
     rtlWrapColumn: 96,
     rtlAlignColumn: 96,
     directionEnv: true,
+    desktop: true,
     debug: false,
 };
 export function normalizeOptions(input) {
@@ -56,6 +57,7 @@ export function normalizeOptions(input) {
         rtlWrapColumn: Math.trunc(readNumber(raw.rtlWrapColumn, DEFAULT_OPTIONS.rtlWrapColumn, 20, 240)),
         rtlAlignColumn: Math.trunc(readNumber(raw.rtlAlignColumn, DEFAULT_OPTIONS.rtlAlignColumn, 20, 240)),
         directionEnv: readBoolean(raw.directionEnv, DEFAULT_OPTIONS.directionEnv),
+        desktop: readBoolean(raw.desktop, DEFAULT_OPTIONS.desktop),
         debug: readBoolean(raw.debug, DEFAULT_OPTIONS.debug),
     };
 }
