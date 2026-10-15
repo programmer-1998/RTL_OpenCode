@@ -1,7 +1,9 @@
 import { PLUGIN_ID, formatBidiText, normalizeOptions, statusText, systemPrompt, } from "./core.js";
+import { ensureDesktopPatch } from "./desktop.js";
 export const server = async ({ client }, options) => {
     const settings = normalizeOptions(options);
     const modelTextSettings = { ...settings, alignRtlParagraphs: false };
+    ensureDesktopPatch({ enabled: settings.desktop, log: (message) => void log(client, settings, "info", message) });
     await log(client, settings, "info", "initialized", { status: statusText(settings) });
     const hooks = {
         "experimental.chat.system.transform": async (_input, output) => {

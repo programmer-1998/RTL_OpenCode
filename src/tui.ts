@@ -1,8 +1,10 @@
 import type { TuiPlugin, TuiPluginModule } from "@opencode-ai/plugin/tui"
 import { PLUGIN_ID, analyzeDirection, normalizeOptions, statusText } from "./core.js"
+import { ensureDesktopPatch } from "./desktop.js"
 
 export const tui: TuiPlugin = async (api, options) => {
   const settings = normalizeOptions(options)
+  ensureDesktopPatch({ enabled: settings.desktop, log: (message) => console.log(`[${PLUGIN_ID}] ${message}`) })
   const disposers: Array<() => void> = []
 
   const showStatus = () => {

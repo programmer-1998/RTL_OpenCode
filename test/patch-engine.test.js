@@ -46,7 +46,7 @@ function runEngine(...args) {
 // read reflects the archive file that the engine just replaced.
 function readHtml(archive) {
   asar.uncache(archive)
-  return asar.extractFile(archive, "out/renderer/index.html").toString("utf8")
+  return asar.extractFile(archive, join("out", "renderer", "index.html")).toString("utf8")
 }
 
 function buildFakeApp(work) {
@@ -80,7 +80,11 @@ test("patch engine: applies, backs up and unpatch-restores a fake asar", async (
     for (const marker of MARKERS) assert.ok(patched.includes(marker), `patched must contain ${marker}`)
     for (const selector of TAB_SELECTORS)
       assert.ok(patched.includes(selector), `patched CSS must contain ${selector}`)
-    assert.equal((patched.match(/unicode-bidi: plaintext/g) || []).length, 1, "the rules live in one block")
+    const ruleCount = (patched.match(/unicode-bidi: plaintext/g) || []).length
+    assert.ok(ruleCount >= 1, "unicode-bidi: plaintext rules are injected")
+    assert.ok(patched.includes("@font-face"), "Vazirmatn @font-face must be injected")
+    assert.ok(patched.includes("Vazirmatn"), "Vazirmatn font family must be injected")
+    assert.ok(patched.includes('data-rtl-version="2"'), "patch version marker must be present")
     assert.ok(existsSync(`${archive}.bak-rtl`), "backup must be created")
     assert.ok(
       existsSync(join(`${archive}.unpacked`, "node_modules", "native-demo", "index.node")),
@@ -91,6 +95,11 @@ test("patch engine: applies, backs up and unpatch-restores a fake asar", async (
     const twice = readHtml(archive)
     assert.equal((twice.match(/<style id="rtl-bidi-fix"/g) || []).length, 1, "no duplicate style injection")
     assert.equal((twice.match(/<script id="rtl-bidi-fix"/g) || []).length, 1, "no duplicate script injection")
+    assert.equal(
+      (twice.match(/unicode-bidi: plaintext/g) || []).length,
+      ruleCount,
+      "rules are not duplicated on re-run",
+    )
 
     runEngine("--asar", archive, "--unpatch")
     const restored = readHtml(archive)

@@ -26,6 +26,8 @@ export type RtlPluginOptions = {
   rtlWrapColumn?: number
   rtlAlignColumn?: number
   directionEnv?: boolean
+  /** Keep the Desktop app's app.asar bidi/font patch applied (self-heal). */
+  desktop?: boolean
   debug?: boolean
 }
 
@@ -45,6 +47,7 @@ export type NormalizedRtlOptions = {
   rtlWrapColumn: number
   rtlAlignColumn: number
   directionEnv: boolean
+  desktop: boolean
   debug: boolean
 }
 
@@ -104,6 +107,7 @@ const DEFAULT_OPTIONS: NormalizedRtlOptions = {
   rtlWrapColumn: 96,
   rtlAlignColumn: 96,
   directionEnv: true,
+  desktop: true,
   debug: false,
 }
 
@@ -128,6 +132,7 @@ export function normalizeOptions(input: unknown): NormalizedRtlOptions {
     rtlWrapColumn: Math.trunc(readNumber(raw.rtlWrapColumn, DEFAULT_OPTIONS.rtlWrapColumn, 20, 240)),
     rtlAlignColumn: Math.trunc(readNumber(raw.rtlAlignColumn, DEFAULT_OPTIONS.rtlAlignColumn, 20, 240)),
     directionEnv: readBoolean(raw.directionEnv, DEFAULT_OPTIONS.directionEnv),
+    desktop: readBoolean(raw.desktop, DEFAULT_OPTIONS.desktop),
     debug: readBoolean(raw.debug, DEFAULT_OPTIONS.debug),
   }
 }

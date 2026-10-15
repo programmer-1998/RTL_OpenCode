@@ -6,11 +6,13 @@
 // runtime-resolved `@opencode/plugin/tui` import plus built dist/core.js.
 import { Plugin } from "@opencode/plugin/tui"
 import { analyzeDirection, normalizeOptions, statusText } from "./dist/core.js"
+import { ensureDesktopPatch } from "./dist/desktop.js"
 
 export default Plugin.define({
   id: "opencode-rtl-fix.cli",
   async setup(context) {
     const settings = normalizeOptions(context.options)
+    ensureDesktopPatch({ enabled: settings.desktop, log: (message) => console.log(`[opencode-rtl-fix] ${message}`) })
 
     context.keymap.layer(() => ({
       mode: "global",

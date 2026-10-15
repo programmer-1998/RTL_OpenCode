@@ -39,13 +39,14 @@ This project solves the problem in **two complementary layers**:
 | Layer | Tool | What it fixes |
 | --- | --- | --- |
 | **1) Text layer (opencode server)** | `server` plugin | Sent user messages, chat history, model replies and tool output — using Unicode **bidi isolates** (`RLI` / `LRI` / `PDI`) per UAX #9. From opencode **1.18.31** the Terminal/Desktop renderer also applies `dir="auto"` + `unicode-bidi: plaintext` natively, so this layer focuses on the TUI/web and wording that the model keeps LTR tokens intact |
-| **2) UI layer (Desktop)** | `patch/` scripts (Linux / macOS / Windows) | The **live prompt composer** and the **tab/session titles** that no plugin hook can touch — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` |
+| **2) UI layer (Desktop)** | `app.asar` patch (engine `patch/lib/patch-asar.mjs` + per-OS wrapper), which the server plugin also applies & self-heals | **Every text surface of the UI**: the live prompt composer, chat messages, tab/session & terminal titles, menus, dialogs, toasts, settings, file tree, review filenames, attachments, permissions and questions — by injecting `dir="auto"` + `unicode-bidi: plaintext` into `app.asar` (code, diffs and shell output stay LTR) — plus the **Vazirmatn** font for all UI text |
 
 <details>
 <summary>🔍 How does it work?</summary>
 
 - **The plugin** hooks into opencode's server hooks (`chat.message`, `experimental.text.complete`, `tool.execute.after`, …). For each paragraph it resolves the direction via the **first-strong character** rule; RTL paragraphs are wrapped in `RLI…PDI`, and the English/code tokens inside them (like `SINA`, `/path/to/file`) are isolated with `LRI…PDI` so their order never flips. These Unicode control characters can upset naive cell-by-cell terminal renderers and pollute the buffer fed to the model (e.g. `^` noise), so this wrapping is **opt-in** via `inlineControls: true`. By default the plugin injects no control characters and additionally **strips** any direction-control chars already stuck to the text.
-- **The Desktop patch** appends a `<style>` and `<script>` to `out/renderer/index.html` inside `app.asar`. Since opencode **1.18.31** already fixes messages/replies natively, the patch targets only what the app still misses: the live composer (`[data-component="prompt-input"]`, `[data-component="prompt-input-v2"]`) and the window/tab titles (`[data-slot="tab-title"]`, `[data-slot="terminal-tab-title"]`), forcing `dir="auto"` + plaintext bidi on them.
+- **The Desktop patch** appends a `<style>` and `<script>` to `out/renderer/index.html` inside `app.asar`. Since opencode **1.18.31** already fixes messages/replies natively, the patch targets only what the app still misses: the live composer (`[data-component="prompt-input"]`, `[data-component="prompt-input-v2"]`) and the window/tab titles (`[data-slot="tab-title"]`, `[data-slot="terminal-tab-title"]`), forcing `dir="auto"` + plaintext bidi on them. The same patch also inlines the **Vazirmatn** font as a base64 `@font-face` and sets `--font-family-sans`, so the whole UI uses Vazirmatn with no system font install and no network.
+- **No plugin hook reaches the Desktop renderer:** the server plugin only has server hooks, the CLI plugin is terminal-only, and opencode's "GUI extensions" system is development-builds-only in the released app. So patching `app.asar` is the only route — and the server plugin applies and **self-heals** that patch automatically (see below).
 
 </details>
 
@@ -61,13 +62,15 @@ This project solves the problem in **two complementary layers**:
 - ✅ TUI status commands: `RTL: Show Status` and `RTL: Analyze Sample` (also on v2 via the new CLI API)
 - ✅ Desktop patch for all three OSes (Linux / macOS / Windows) with automatic backup, `app.asar.unpacked` layout verification and `--unpatch`
 - ✅ Full desktop UI coverage: chat & composer, session and terminal tabs, menus, dialogs, toasts, settings, file tree & file viewer, review panel, attachments, permissions and questions — with LTR protection for code/diffs/shell output
+- ✅ **Vazirmatn (OFL)** font embedded in the desktop UI (no system font install needed)
+- ✅ **Self-healing**: the server plugin applies the desktop patch automatically and re-applies it after every desktop update (no manual re-run)
 - ✅ Compatible with opencode **1.19.0** and **2.x** (`./v2` server entry, `./v2/tui` CLI entry)
 
 ## ⚠️ Important limitation (honest)
 
 **The prompt composer, while you are still typing, is rendered by opencode's own UI and no plugin hook has access to the live buffer.** So:
 
-- **Desktop app** → this part is fixed by the `patch/` scripts — `patch/linux/desktop-rtl.sh`, `patch/macos/desktop-rtl.sh` or `patch/windows/desktop-rtl.ps1` (layer 2).
+- **Desktop app** → this part is fixed by the `app.asar` patch (engine `patch/lib/patch-asar.mjs` plus a per-OS wrapper). No plugin/extension reaches the desktop renderer, so the server plugin applies this patch itself and **self-heals** it — set `desktop: false` if you'd rather patch manually.
 - **Terminal/TUI** → it is rendered cell-by-cell by `@opentui/core`; the real fix there belongs to opencode itself. Yet as soon as you send the message, your prompt and the model reply are fixed by layer 1 everywhere.
 
 ---
@@ -171,6 +174,7 @@ This package ships both APIs: a `./v2` server entry (v2 `ctx.session.hook`) and 
 | `rtlWrapColumn` | `96` | Wrap column used by alignment |
 | `rtlAlignColumn` | `96` | Right-align column |
 | `directionEnv` | `true` | Export `OPENCODE_RTL*` in tool environments |
+| `desktop` | `true` | Auto-install / self-heal the Desktop patch (`app.asar` + Vazirmatn). Set `false` to leave app files untouched |
 | `debug` | `false` | Log via `client.app.log()` |
 
 > **Direction note:** direction follows the *first strong character* — a sentence starting with Persian becomes RTL, one starting with English/code becomes LTR. To force everything RTL: `"forceDirection": "rtl"`.
@@ -189,7 +193,9 @@ If you see extra characters such as `^^^^^` while RTL text renders in the TUI, t
 
 ## 🖥️ Desktop app patch (full UI coverage)
 
-The Electron app renders parts of its text without any automatic direction. The patch appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so **every text surface** — chat & composer, tabs, menus, dialogs, toasts, settings, file tree/viewer, review panel, attachments, permissions and questions — behaves exactly like in modern browsers (code, diffs and shell output intentionally stay LTR).
+The Electron app renders parts of its text without any automatic direction. The patch appends a `<style>` + `<script>` to `out/renderer/index.html` inside `app.asar` so **every text surface** — chat & composer, tabs, menus, dialogs, toasts, settings, file tree/viewer, review panel, attachments, permissions and questions — behaves exactly like in modern browsers (code, diffs and shell output intentionally stay LTR). The same patch inlines the **Vazirmatn** font as base64 and sets `--font-family-sans`, so the whole UI uses Vazirmatn with no system font install and no network.
+
+> 🔁 **Important:** from **0.2.0** the server plugin applies this patch and **self-heals** it — after every desktop update (which replaces `app.asar`) the plugin re-applies it automatically. The manual scripts below are only needed if you set `desktop: false`, or want it applied right now without a restart.
 
 The patch is powered by a **shared JavaScript engine** (`patch/lib/patch-asar.mjs`) that runs identically on all three OSes; only the per-OS **wrapper** locates the app and takes the needed privileges (sudo / UAC):
 
@@ -227,8 +233,9 @@ Confirm the UAC prompt. (Or simply double-click `patch\windows\desktop-rtl.cmd`.
 ### What it does
 
 1. Backs up `app.asar` in place (`app.asar.bak-rtl`);
-2. Extracts, patches `index.html`, repacks the archive;
-3. **Verifies the `app.asar.unpacked` layout (native modules like `node-pty`) one-by-one against the previous version** so nothing breaks.
+2. Extracts, patches `index.html` (bidi rules + the Vazirmatn `@font-face`), repacks the archive;
+3. **Verifies the `app.asar.unpacked` layout (native modules like `node-pty`) one-by-one against the previous version** so nothing breaks;
+4. Writes a version stamp (`app.asar.rtl-stamp`) that the plugin uses to tell whether the patch is current and to **upgrade** older patches (never patching an already-patched file twice).
 
 Then **close and reopen the opencode Desktop app**.
 
@@ -245,11 +252,19 @@ sudo bash patch/macos/desktop-rtl.sh --unpatch
 powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 ```
 
-### ⚠️ After every Desktop update
+### 🔁 Self-healing after every update (default)
 
-The app auto-updates and the update replaces the patched file. Just re-run your OS's script after each update.
+The app auto-updates and the update replaces the patched file. From **0.2.0** no manual step is needed:
 
-> Default paths: Linux `/opt/OpenCode/resources/app.asar`, macOS `/Applications/OpenCode.app/Contents/Resources/app.asar`, Windows `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. If installed elsewhere: Linux/macOS `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`, Windows `powershell ... -Asar C:\path\to\app.asar`.
+- the server plugin (started with the Desktop/CLI) checks, on load, whether the patch exists and is current;
+- the `app.asar` is locked while the app runs, so the plugin first probes whether the file is writable and only patches when the app is closed, retrying every 2 minutes meanwhile;
+- so: install the plugin → quit the Desktop app → next launch it is patched. After every update it heals itself the same way.
+
+> Prefer to keep the plugin away from app files? Set `"desktop": false` and use the manual scripts. None of this needs `sudo`/UAC unless the app is installed in a system location.
+
+### Manual install (optional)
+
+> Default paths: Linux `/opt/OpenCode/resources/app.asar`, macOS `/Applications/OpenCode.app/Contents/Resources/app.asar`, Windows `%LOCALAPPDATA%\Programs\@opencode-aidesktop\resources\app.asar`. If installed elsewhere: Linux/macOS `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`, Windows `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -298,6 +313,7 @@ npm test           # build + tests (incl. the desktop-patch engine)
 RTL_OpenCode/
 ├── src/
 │   ├── core.ts      ← bidi engine: direction detection, isolates, markdown/code, alignment
+│   ├── desktop.ts   ← desktop self-heal guard (applies / re-applies app.asar)
 │   ├── server.ts    ← server hooks, v1 (1.19)
 │   ├── tui.ts       ← TUI commands in v1
 │   └── index.ts     ← exports
@@ -306,7 +322,8 @@ RTL_OpenCode/
 │   └── index.ts     ← exports
 ├── test/core.test.js   ← tests
 ├── patch/
-│   ├── lib/patch-asar.mjs      ← shared cross-platform patch engine
+│   ├── lib/patch-asar.mjs      ← shared cross-platform patch engine + self-heal guard
+│   ├── fonts/Vazirmatn-Variable.woff2 ← Vazirmatn (OFL), inlined as base64
 │   ├── linux/desktop-rtl.sh    ← Desktop patch for Linux
 │   ├── macos/desktop-rtl.sh    ← Desktop patch for macOS
 │   └── windows/
@@ -343,6 +360,7 @@ This project was built by **Sina Khanzadeh**.
 ## 🙏 Credits
 
 - **opencode** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
+- **Vazirmatn** font — by Saber Rastikerdar, licensed under [SIL OFL 1.1](https://github.com/rastikerdar/vazirmatn/blob/master/OFL.txt)
 - The **opencode-rtl** npm plugin (author: `razavioo`) that inspired this implementation
 - Related items in the opencode monorepo:
   - [issue #35319](https://github.com/anomalyco/opencode/issues/35319) — broken mixed text on Desktop
