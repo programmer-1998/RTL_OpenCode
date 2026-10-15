@@ -19,7 +19,6 @@ function candidates() {
     const pfx86 = process.env["ProgramFiles(x86)"] ?? "";
     const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
     const list = [
-        local && join(local, "Programs", "@opencode-aidesktop", "resources", "app.asar"),
         local && join(local, "Programs", "OpenCode", "resources", "app.asar"),
         local && join(local, "Programs", "opencode", "resources", "app.asar"),
         pf && join(pf, "OpenCode", "resources", "app.asar"),

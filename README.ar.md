@@ -263,7 +263,7 @@ powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 
 ### التثبيت اليدوي (اختياري)
 
-> المسارات الافتراضية: لينكس `/opt/OpenCode/resources/app.asar`، ماك `/Applications/OpenCode.app/Contents/Resources/app.asar`، ويندوز `%LOCALAPPDATA%\Programs\@opencode-aidesktop\resources\app.asar`. إذا كان مثبتًا في مكان آخر: لينكس/ماك `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`، ويندوز `powershell ... -Asar C:\path\to\app.asar`.
+> المسارات الافتراضية: لينكس `/opt/OpenCode/resources/app.asar`، ماك `/Applications/OpenCode.app/Contents/Resources/app.asar`، ويندوز `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. إذا كان مثبتًا في مكان آخر: لينكس/ماك `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`، ويندوز `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 

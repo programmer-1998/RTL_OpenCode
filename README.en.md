@@ -264,7 +264,7 @@ The app auto-updates and the update replaces the patched file. From **0.2.0** no
 
 ### Manual install (optional)
 
-> Default paths: Linux `/opt/OpenCode/resources/app.asar`, macOS `/Applications/OpenCode.app/Contents/Resources/app.asar`, Windows `%LOCALAPPDATA%\Programs\@opencode-aidesktop\resources\app.asar`. If installed elsewhere: Linux/macOS `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`, Windows `powershell ... -Asar C:\path\to\app.asar`.
+> Default paths: Linux `/opt/OpenCode/resources/app.asar`, macOS `/Applications/OpenCode.app/Contents/Resources/app.asar`, Windows `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. If installed elsewhere: Linux/macOS `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/<linux|macos>/desktop-rtl.sh`, Windows `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -360,6 +360,7 @@ This project was built by **Sina Khanzadeh**.
 ## 🙏 Credits
 
 - **opencode** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
+- Contributor: **sadegh19b** — embedded Vazirmatn font, desktop-patch self-heal and the `desktop` option ([PR #2](https://github.com/programmer-1998/RTL_OpenCode/pull/2))
 - **Vazirmatn** font — by Saber Rastikerdar, licensed under [SIL OFL 1.1](https://github.com/rastikerdar/vazirmatn/blob/master/OFL.txt)
 - The **opencode-rtl** npm plugin (author: `razavioo`) that inspired this implementation
 - Related items in the opencode monorepo:

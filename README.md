@@ -264,7 +264,7 @@ powershell -ExecutionPolicy Bypass -File patch\windows\desktop-rtl.ps1 -Unpatch
 
 ### نصب دستی (اختیاری)
 
-> مسیر پیش‌فرض: لینوکس `/opt/OpenCode/resources/app.asar`، مک `/Applications/OpenCode.app/Contents/Resources/app.asar`، ویندوز `%LOCALAPPDATA%\Programs\@opencode-aidesktop\resources\app.asar`. اگر جای دیگری نصب است: لینوکس/مک `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/linux (یا macos)/desktop-rtl.sh`، ویندوز `powershell ... -Asar C:\path\to\app.asar`.
+> مسیر پیش‌فرض: لینوکس `/opt/OpenCode/resources/app.asar`، مک `/Applications/OpenCode.app/Contents/Resources/app.asar`، ویندوز `%LOCALAPPDATA%\Programs\OpenCode\resources\app.asar`. اگر جای دیگری نصب است: لینوکس/مک `sudo DESKTOP_ASAR=/path/to/app.asar bash patch/linux (یا macos)/desktop-rtl.sh`، ویندوز `powershell ... -Asar C:\path\to\app.asar`.
 
 ---
 
@@ -359,6 +359,7 @@ RTL_OpenCode/
 ## 🙏 اعتبارات (Credits)
 
 - **opencode** — [github.com/anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai)
+- مشارکت‌کننده: **sadegh19b** — فونت جاسازی‌شدهٔ وزیرمتن، خودترمیمی پچ دسکتاپ و آپشن `desktop` ([PR #2](https://github.com/programmer-1998/RTL_OpenCode/pull/2))
 - فونت **وزیرمتن (Vazirmatn)** — ساختهٔ صابر راستی‌کردار، تحت مجوز [SIL OFL 1.1](https://github.com/rastikerdar/vazirmatn/blob/master/OFL.txt)
 - پلاگین مرجع **opencode-rtl** روی npm (نویسنده: `razavioo`) که الهام‌بخش این پیاده‌سازی بود
 - مراجع و کارهای مرتبط در مونوریپؤ opencode:
